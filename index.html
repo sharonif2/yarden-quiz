@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חידון: בינה מלאכותית וביטוח</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #F6F6F6;
+            color: #333333;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .bg-primary {
+            background-color: #004AAD;
+        }
+        .text-primary {
+            color: #004AAD;
+        }
+        .bg-accent {
+            background-color: #00C2FF;
+        }
+        .text-accent {
+            color: #00C2FF;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="container mx-auto p-6 bg-white rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-center mb-6 text-primary">חידון: בינה מלאכותית וביטוח</h1>
+
+        <div id="quiz-container">
+            <div id="question-area" class="mb-6">
+                <p id="question-text" class="text-xl font-semibold mb-4"></p>
+                <p id="hint-text" class="text-sm text-gray-600 italic mb-4"></p>
+                <div id="answer-options" class="space-y-3">
+                </div>
+            </div>
+
+            <div id="feedback-area" class="mt-6 p-4 rounded-lg hidden">
+            </div>
+
+            <div class="flex justify-between mt-8">
+                <button id="next-button" class="bg-primary text-white px-6 py-3 rounded-lg shadow-md hover:bg-opacity-90 transition duration-300 hidden">
+                    לשאלה הבאה
+                </button>
+                <button id="restart-button" class="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-gray-600 transition duration-300 hidden">
+                    התחל מחדש
+                </button>
+            </div>
+        </div>
+
+        <div id="results-container" class="hidden mt-8 text-center">
+            <h2 class="text-2xl font-bold text-primary mb-4">תוצאות החידון</h2>
+            <p id="final-score" class="text-xl mb-4"></p>
+            <div id="review-area" class="text-right space-y-6">
+            </div>
+            <button id="restart-quiz-button" class="bg-primary text-white px-6 py-3 rounded-lg shadow-md hover:bg-opacity-90 transition duration-300 mt-6">
+                התחל חידון חדש
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = {
+            "questions": [
+                {
+                    "question": "על פי המחקר, מהו ה\"פרדוקס הדיגיטלי\" המרכזי שמאפיין את שוק הביטוח הישראלי כיום?",
+                    "hint": "חשבו על ההבדל בין רכישת פוליסת נסיעות פשוטה לבין תכנון תיק פנסיוני מורכב.",
+                    "answerOptions": [
+                        {
+                            "text": "למרות ההתקדמות הטכנולוגית, רוב הלקוחות עדיין מעדיפים לבצע את כל הפעולות במשרדי הסוכן.",
+                            "rationale": "המחקר מראה העדפה למגע אנושי, אך בעיקר במקרים מורכבים, לא עבור כל הפעולות.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "הטכנולוגיה מייעלת תהליכים, אך במקביל מדגישה את הערך הייחודי של הסוכן האנושי בייעוץ מורכב.",
+                            "rationale": "תיאור זה לוכד את מהות הפרדוקס: הטכנולוגיה לא מחליפה את האדם, אלא ממקדת את תפקידו בערך מוסף גבוה.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "סוכנים משתמשים בטכנולוגיה כדי להחליף לחלוטין את האינטראקציה האנושית עם לקוחות.",
+                            "rationale": "המחקר טוען את ההיפך: הטכנולוגיה אמורה לשמש ככלי עזר ('טייס משנה') כדי לשפר, ולא להחליף, את הקשר האנושי.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "חברות הביטוח מפתחות כלים דיגיטליים, אך הסוכנים עצמם מסרבים להשתמש בהם.",
+                            "rationale": "הבעיה המרכזית שצוינה אינה סירוב מוחלט, אלא פער מיומנויות וקצב אימוץ איטי בקרב חלק גדול מהסוכנים.",
+                            "isCorrect": false
+                        }
+                    ]
+                },
+                {
+                    "question": "סוכנות ביטוח גדולה מטמיעה מערכת AI לטיפול בתביעות. מהי התוצאה המרכזית הצפויה, בהתבסס על נתונים מחברות ישראליות שהוזכרו במחקר?",
+                    "hint": "ההשפעה המיידית של אוטומציה היא על מהירות ויעילות. חפשו את המספר המשמעותי ביותר בהקשר זה.",
+                    "answerOptions": [
+                        {
+                            "text": "הכפלת כמות הפוליסות החדשות שהסוכנות מוכרת מדי חודש.",
+                            "rationale": "למרות ש-AI יכולה לסייע במכירות, החיסכון הדרמטי ביותר שהודגש היה בתחום התפעולי של התביעות.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "חיסכון של עד 40% בזמן הטיפול הממוצע בתביעה.",
+                            "rationale": "זהו הנתון הספציפי שהוזכר במחקר כמדד להצלחת הטמעת AI בעיבוד תביעות בחברות ישראליות.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "ביטול מוחלט של הצורך בנציגי שירות אנושיים.",
+                            "rationale": "המערכת מפחיתה עומס ומייעלת, אך אינה מבטלת את הצורך באנשי מקצוע לטיפול במקרים מורכבים ומתן שירות אישי.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "ירידה של 10% בעלות כל הפוליסות שהסוכנות מציעה.",
+                            "rationale": "חיסכון תפעולי יכול להשפיע על התמחור, אך אין קשר ישיר ומיידי לירידה גורפת בעלות כל הפוליסות.",
+                            "isCorrect": false
+                        }
+                    ]
+                },
+                {
+                    "question": "מהו ההבדל העיקרי באופן שבו AI משפיעה על סוכן ביטוח עצמאי לעומת סוכנות ביטוח גדולה, כפי שעולה מהמחקר?",
+                    "hint": "ההבדל טמון בעיקר בקנה המידה ובהיקף של התהליכים שעוברים אוטומציה.",
+                    "answerOptions": [
+                        {
+                            "text": "רק סוכנויות גדולות יכולות להרשות לעצמן להשתמש ב-AI, בעוד שסוכנים עצמאיים נשארים מאחור.",
+                            "rationale": "המחקר מציג כלים שזמינים גם לסוכנים עצמאיים (כמו CRM וצ'אטבוטים), ההבדל הוא בהיקף היישום.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "סוכן עצמאי ישתמש ב-AI בעיקר לשיפור הייעוץ האישי, בעוד שסוכנות תשתמש בה לאופטימיזציה של תהליכים רוחביים כמו חיתום וניהול לידים.",
+                            "rationale": "הבחנה זו משקפת במדויק את הטבלה וההסברים במחקר, המדגישים את ההבדל בין פרסונליזציה אישית ליעילות תפעולית רחבה.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "סוכנים עצמאיים מתמקדים ב-AI לשירות לקוחות, וסוכנויות מתמקדות ב-AI לשיווק בלבד.",
+                            "rationale": "החלוקה הזו צרה מדי. גם סוכנים וגם סוכנויות משתמשים ב-AI למגוון מטרות, כולל שיווק ושירות.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "אין הבדל משמעותי; ההשפעה של AI זהה לחלוטין בשני המקרים.",
+                            "rationale": "המחקר מקדיש חלק נכבד, כולל טבלה, כדי להדגיש את ההבדלים בהיקף וביישומים האסטרטגיים בין השניים.",
+                            "isCorrect": false
+                        }
+                    ]
+                },
+                {
+                    "question": "בעידן שבו AI מבצעת משימות אנליטיות רבות, איזו קטגוריית מיומנויות הופכת להיות החשובה ביותר עבור סוכן הביטוח כדי לשמור על רלוונטיות?",
+                    "hint": "חשבו מהי התכונה המרכזית שבינה מלאכותית, נכון להיום, מתקשה לחקות.",
+                    "answerOptions": [
+                        {
+                            "text": "מיומנויות תכנות ופיתוח אלגוריתמים של AI.",
+                            "rationale": "הסוכן צריך להבין ולהשתמש ב-AI (אוריינות), אך לא בהכרח לפתח אותה בעצמו. זו משימה למומחי טכנולוגיה.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "מיומנויות ניהול אדמיניסטרטיבי והזנת נתונים מדויקת.",
+                            "rationale": "אלו הן בדיוק המשימות שה-AI צפויה להפוך לאוטומטיות, ולכן חשיבותן היחסית עבור הסוכן האנושי תרד.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "מיומנויות אנושיות/רכות כמו אינטליגנציה רגשית, אמפתיה ובניית אמון.",
+                            "rationale": "המחקר מדגיש שוב ושוב שהערך המוסף האנושי, הליווי ברגעי משבר ובניית קשרים, הוא שיבדל את הסוכן מהמכונה.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "מיומנויות מכירה אגרסיביות ותפעול קמפיינים רחבי היקף.",
+                            "rationale": "התפקיד משתנה מ'מוכר' ל'יועץ', ו-AI יכולה לסייע רבות באופטימיזציה של קמפיינים, מה שהופך את המיומנות הזו לפחות ייחודית לאדם.",
+                            "isCorrect": false
+                        }
+                    ]
+                },
+                {
+                    "question": "המחקר מתאר שינוי במודל העסקי של סוכן הביטוח מ\"רכישת מוצר\" ל\"רכישת תועלת\". מהי דוגמה טובה ליישום מודל זה?",
+                    "hint": "התמקדו במעבר מתגובה לנזק (פיצוי) לפעולה יזומה שמונעת אותו מלכתחילה.",
+                    "answerOptions": [
+                        {
+                            "text": "הסוכן מציע את הפוליסה עם המחיר הנמוך ביותר, ללא קשר לכיסויים.",
+                            "rationale": "מודל זה מתמקד במחיר ('מוצר') ולא בערך המוסף או בניהול הסיכונים הכולל ('תועלת').",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "הסוכן משמש כ\"מומחה מניעה משפחתי\" ומסייע ללקוח באופן פרואקטיבי להפחית סיכונים.",
+                            "rationale": "זהו לב השינוי המתואר: הסוכן מספק ערך מתמשך בניהול סיכונים, ולא רק מוכר פוליסה באופן חד-פעמי.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "הסוכן מתמקד במכירת פוליסות דיגיטליות בלבד, ללא כל ייעוץ.",
+                            "rationale": "זהו מודל עסקי אפשרי, אך הוא מייצג את הצד הטרנזקציונלי של השוק, ולא את מודל 'רכישת התועלת' הדורש ייעוץ.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "הסוכן גובה עמלה גבוהה יותר על כל פוליסה כדי לשקף את השימוש בטכנולוגיה.",
+                            "rationale": "מקור ההכנסה העתידי צפוי להגיע משירותי ערך מוסף, לאו דווקא מעמלות גבוהות יותר על מוצרים קיימים.",
+                            "isCorrect": false
+                        }
+                    ]
+                },
+                {
+                    "question": "מהו האתגר המשמעותי ביותר בגיוס ושימור לקוחות באמצעות AI, על פי הנתון לפיו 52% מהלקוחות אינם סומכים על הטכנולוגיה?",
+                    "hint": "הטכנולוגיה יכולה להיות היעילה ביותר, אך ללא אמונה של המשתמש ביכולותיה ובכוונותיה, היא לא תאומץ.",
+                    "answerOptions": [
+                        {
+                            "text": "העלות הגבוהה של צ'אטבוטים מתוחכמים.",
+                            "rationale": "העלות היא אתגר הטמעה, אך האתגר המרכזי מול הלקוח, כפי שעולה מהנתון, אינו כלכלי.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "קושי טכני של לקוחות מבוגרים להשתמש בכלים דיגיטליים.",
+                            "rationale": "זהו אתגר קיים, אך חוסר האמון המוזכר במחקר הוא בעיה רחבה יותר שחוצה גילאים ונוגעת לפרטיות והוגנות.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "הצורך באיזון בין פרסונליזציה עמוקה לבין בניית אמון ושמירה על פרטיות.",
+                            "rationale": "זו הדילמה המרכזית: כדי לספק שירות מותאם אישית AI צריכה דאטה, אך השימוש בדאטה הוא בדיוק מה שמעורר את חוסר האמון.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "הזמן שלוקח למערכות AI ללמוד ולהשתפר.",
+                            "rationale": "זהו אתגר טכנולוגי פנימי, בעוד שהשאלה מתמקדת באתגר מול הלקוחות.",
+                            "isCorrect": false
+                        }
+                    ]
+                },
+                {
+                    "question": "מהו העיקרון המנחה המרכזי שהרגולטורים בישראל שוקלים לאמץ כלפי AI במגזר הפיננסי?",
+                    "hint": "הרגולציה שואפת להתמקד בפעולה עצמה ובתוצאותיה, ולא בטכנולוגיה הספציפית שמאחוריה.",
+                    "answerOptions": [
+                        {
+                            "text": "איסור גורף על שימוש ב-AI בתהליכי חיתום וקבלת החלטות.",
+                            "rationale": "הגישה המתוארת במחקר היא של עידוד חדשנות תוך ניהול סיכונים, לא איסור גורף.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "חיוב כל חברות הביטוח להשתמש באותו מודל AI ממשלתי.",
+                            "rationale": "גישה כזו תפגע בתחרות ובחדשנות; הרגולטור מעדיף לקבוע עקרונות ולא להכתיב פתרון טכנולוגי יחיד.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "הטלת אחריות מלאה על מפתחי ה-AI, ושחרור חברות הביטוח מאחריות.",
+                            "rationale": "המחקר מציין בפירוש שהרגולציה שומרת על עקרון אחריות הגוף המפוקח (חברת הביטוח), גם בשימוש בכלי צד שלישי.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "רגולציה ניטרלית טכנולוגית, המתמקדת בפעילות ובסיכונים ולא בטכנולוגיה עצמה.",
+                            "rationale": "זהו העיקרון המרכזי שהוזכר בדוחות הרגולטוריים, המאפשר גמישות והתאמה לטכנולוגיות משתנות.",
+                            "isCorrect": true
+                        }
+                    ]
+                },
+                {
+                    "question": "העובדה שכ-85% מסוכני הביטוח בישראל עדיין לא התנסו בכלי AI מצביעה בראש ובראשונה על:",
+                    "hint": "נתון זה חושף פער בין הפוטנציאל העצום של הטכנולוגיה לבין המצב הקיים בשטח.",
+                    "answerOptions": [
+                        {
+                            "text": "כלי ה-AI אינם יעילים לענף הביטוח.",
+                            "rationale": "המחקר מציג נתונים רבים הסותרים קביעה זו, ומראה יעילות ו-ROI חיובי.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "צורך אסטרטגי דחוף בהכשרה ופיתוח הון אנושי בענף.",
+                            "rationale": "הפער הגדול בין הפוטנציאל למימוש מצביע על צוואר בקבוק של ידע ומיומנויות, מה שמחייב הכשרה נרחבת.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "התנגדות אידיאולוגית של סוכנים לטכנולוגיה.",
+                            "rationale": "המחקר רומז שהסיבה היא יותר פער כישורים ופחות התנגדות עקרונית, אם כי קיים חשש מאובדן משרות.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "הרגולציה בישראל אוסרת על סוכנים להשתמש ב-AI.",
+                            "rationale": "הרגולציה אינה אוסרת, אלא נמצאת בתהליכי גיבוש ועידוד חדשנות מבוקרת.",
+                            "isCorrect": false
+                        }
+                    ]
+                },
+                {
+                    "question": "איזה מהבאים מהווה דוגמה למוצר ביטוח חדשני שהתאפשר בזכות יכולות ניתוח הנתונים של AI?",
+                    "hint": "חשבו על סיכונים מודרניים שלא היו קיימים או ניתנים למדידה בעבר.",
+                    "answerOptions": [
+                        {
+                            "text": "ביטוח חיים סטנדרטי עם פרמיה קבועה.",
+                            "rationale": "זהו מוצר ביטוח ותיק וקלאסי, שאינו דורש יכולות AI מתקדמות לקיומו הבסיסי.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "ביטוח רכב חובה על פי חוק.",
+                            "rationale": "זהו מוצר בסיסי ומפוקח שקיים שנים רבות לפני כניסת ה-AI לתמונה.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "ביטוח מוניטין דיגיטלי למשפיעני רשת.",
+                            "rationale": "זהו סיכון מודרני, שקשה לכמת ללא ניתוח נתונים מתקדם, והוא הוזכר במחקר כדוגמה למוצר עתידי.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "ביטוח מבנה למקרה של שריפה או רעידת אדמה.",
+                            "rationale": "זהו מוצר ביטוח מסורתי. AI יכולה לשפר את תמחורו, אך לא יצרה את הקטגוריה עצמה.",
+                            "isCorrect": false
+                        }
+                    ]
+                },
+                {
+                    "question": "בהינתן ש-AI הופכת ל\"טייס משנה\" (Co-pilot), מהי ההמלצה האסטרטגית המרכזית לסוכן השואף להצליח בעתיד?",
+                    "hint": "ההצלחה לא תהיה בהתנגדות לטכנולוגיה, אלא בשילוב חכם שלה עם החוזקות האנושיות.",
+                    "answerOptions": [
+                        {
+                            "text": "להתמקד אך ורק במכירת פוליסות פשוטות וזולות באופן דיגיטלי.",
+                            "rationale": "אסטרטגיה זו מוותרת על הערך המוסף של הסוכן ומתחרה ישירות באוטומציה, מה שעלול להוביל לחוסר רלוונטיות.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "להתעלם מ-AI ולהמשיך לעבוד בשיטות המסורתיות.",
+                            "rationale": "המחקר מבהיר כי גישה זו תוביל להתיישנות ולחץ תחרותי משמעותי.",
+                            "isCorrect": false
+                        },
+                        {
+                            "text": "להשקיע בפיתוח מיומנויות שישלימו את ה-AI ולהתמקד בייעוץ מורכב ובניית קשרים.",
+                            "rationale": "זוהי תמצית האסטרטגיה המומלצת: למנף את הטכנולוגיה כדי לפנות זמן למה שבני אדם עושים הכי טוב.",
+                            "isCorrect": true
+                        },
+                        {
+                            "text": "לנסות להתחרות ב-AI על ידי ביצוע משימות אדמיניסטרטיביות מהר יותר.",
+                            "rationale": "זוהי תחרות אבודה מראש; היעילות של AI במשימות רוטיניות תמיד תהיה גבוהה יותר.",
+                            "isCorrect": false
+                        }
+                    ]
+                }
+            ]
+        };
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let userAnswers = [];
+
+        const questionTextElement = document.getElementById('question-text');
+        const hintTextElement = document.getElementById('hint-text');
+        const answerOptionsElement = document.getElementById('answer-options');
+        const feedbackArea = document.getElementById('feedback-area');
+        const nextButton = document.getElementById('next-button');
+        const restartButton = document.getElementById('restart-button');
+        const quizContainer = document.getElementById('quiz-container');
+        const resultsContainer = document.getElementById('results-container');
+        const finalScoreElement = document.getElementById('final-score');
+        const reviewArea = document.getElementById('review-area');
+        const restartQuizButton = document.getElementById('restart-quiz-button');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function loadQuestion() {
+            feedbackArea.classList.add('hidden');
+            feedbackArea.innerHTML = '';
+            nextButton.classList.add('hidden');
+            restartButton.classList.remove('hidden');
+            answerOptionsElement.innerHTML = '';
+
+            if (currentQuestionIndex < quizData.questions.length) {
+                const question = quizData.questions[currentQuestionIndex];
+                questionTextElement.textContent = `${currentQuestionIndex + 1}. ${question.question}`;
+                hintTextElement.textContent = `רמז: ${question.hint}`;
+
+                let shuffledOptions = [...question.answerOptions];
+                shuffleArray(shuffledOptions);
+
+                shuffledOptions.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = option.text;
+                    button.classList.add('block', 'w-full', 'text-right', 'p-4', 'border', 'rounded-lg', 'bg-white', 'hover:bg-gray-50', 'transition', 'duration-200', 'text-gray-800', 'shadow-sm');
+                    button.onclick = () => selectAnswer(option, button, question);
+                    answerOptionsElement.appendChild(button);
+                });
+            } else {
+                showResults();
+            }
+        }
+
+        function selectAnswer(selectedOption, selectedButton, question) {
+            const allOptionButtons = answerOptionsElement.querySelectorAll('button');
+            allOptionButtons.forEach(button => button.disabled = true);
+
+            selectedButton.classList.add('selected-answer');
+            
+            const isCorrect = selectedOption.isCorrect;
+            userAnswers[currentQuestionIndex] = {
+                question: question.question,
+                userAnswer: selectedOption.text,
+                isCorrect: isCorrect,
+                correctAnswer: question.answerOptions.find(opt => opt.isCorrect).text,
+                rationales: question.answerOptions.map(opt => ({ text: opt.text, rationale: opt.rationale, isCorrect: opt.isCorrect }))
+            };
+
+            if (isCorrect) {
+                score++;
+                selectedButton.classList.add('border-green-500', 'bg-green-100');
+            } else {
+                selectedButton.classList.add('border-red-500', 'bg-red-100');
+            }
+            
+            let feedbackHtml = '';
+            question.answerOptions.forEach(option => {
+                const borderColorClass = option.isCorrect ? 'border-green-500' : 'border-red-500';
+                const bgColorClass = option.isCorrect ? 'bg-green-50' : 'bg-red-50';
+                feedbackHtml += `
+                    <div class="mb-2 p-3 rounded-lg border-2 ${bgColorClass} ${borderColorClass}">
+                        <p class="font-semibold ${option.isCorrect ? 'text-green-700' : 'text-red-700'}">${option.text}</p>
+                        <p class="text-sm ${option.isCorrect ? 'text-green-600' : 'text-red-600'}">${option.rationale}</p>
+                    </div>
+                `;
+            });
+            feedbackArea.innerHTML = feedbackHtml;
+            feedbackArea.classList.remove('hidden');
+            nextButton.classList.remove('hidden');
+        }
+
+        function showResults() {
+            quizContainer.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+            finalScoreElement.textContent = `הציון הסופי שלך: ${score} מתוך ${quizData.questions.length}`;
+
+            reviewArea.innerHTML = '';
+            userAnswers.forEach((answer, index) => {
+                const isCorrectClass = answer.isCorrect ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500';
+                const textColorClass = answer.isCorrect ? 'text-green-700' : 'text-red-700';
+
+                let rationaleHtml = '';
+                answer.rationales.forEach(opt => {
+                    const optColorClass = opt.isCorrect ? 'text-green-600' : 'text-red-600';
+                    rationaleHtml += `
+                        <p class="text-sm ${optColorClass} mb-1">${opt.text}: ${opt.rationale}</p>
+                    `;
+                });
+
+                reviewArea.innerHTML += `
+                    <div class="p-4 border-2 rounded-lg ${isCorrectClass}">
+                        <p class="text-lg font-semibold text-gray-900 mb-2">${index + 1}. ${answer.question}</p>
+                        <p class="mb-1">התשובה שלך: <span class="font-medium ${answer.isCorrect ? 'text-green-700' : 'text-red-700'}">${answer.userAnswer}</span></p>
+                        <p class="mb-2">תשובה נכונה: <span class="font-medium text-green-700">${answer.correctAnswer}</span></p>
+                        <div class="mt-3 border-t pt-3 border-gray-200">
+                            <p class="font-semibold text-gray-700 mb-2">הסברים:</p>
+                            ${rationaleHtml}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            quizContainer.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            loadQuestion();
+        }
+
+        nextButton.addEventListener('click', () => {
+            currentQuestionIndex++;
+            loadQuestion();
+        });
+
+        restartQuizButton.addEventListener('click', resetQuiz);
+        restartButton.addEventListener('click', resetQuiz);
+
+        loadQuestion();
+    </script>
+</body>
+</html>
