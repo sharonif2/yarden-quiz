@@ -65,9 +65,23 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global Firebase variables (provided by Canvas environment)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        // *** חשוב מאוד! ***
+        // *** אנא החלף/י את כל הערכים באובייקט firebaseConfig שלהלן בפרטים האמיתיים של פרויקט ה-Firebase שלך. ***
+        // *** ניתן למצוא את הפרטים הללו ב-Firebase Console -> Project settings -> Your apps -> Web app -> Config. ***
+        // *** אם לא תחליף/י את הערכים, החיבור ל-Firebase לא יעבוד והחידון לא ישמור נתונים. ***
+        const firebaseConfig = {
+          apiKey: "YOUR_API_KEY", // החלף ב-API Key שלך
+          authDomain: "YOUR_AUTH_DOMAIN", // החלף ב-Auth Domain שלך
+          projectId: "YOUR_PROJECT_ID", // החלף ב-Project ID שלך
+          storageBucket: "YOUR_STORAGE_BUCKET", // החלף ב-Storage Bucket שלך
+          messagingSenderId: "YOUR_MESSAGING_SENDER_ID", // החלף ב-Messaging Sender ID שלך
+          appId: "YOUR_APP_ID" // החלף ב-App ID שלך
+        };
+        // *** סוף הדבקת firebaseConfig ***
+        
+        // הגדרת מזהה ייחודי עבור האפליקציה ב-Firestore
+        // Unique identifier for the app's collection in Firestore
+        const currentAppId = 'insurance_quiz_app'; // ניתן לשנות שם זה לפי העדפתך
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -79,7 +93,7 @@
         window.firestoreDb = db;
         window.firebaseAuth = auth;
         window.currentUserId = null; // Will be set after auth state is ready
-        window.currentAppId = appId;
+        window.currentAppId = currentAppId; // השתמש במזהה האפליקציה שהוגדר
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -87,11 +101,14 @@
             } else {
                 // Sign in anonymously if no user is authenticated or initial token is not provided
                 try {
-                    if (typeof __initial_auth_token !== 'undefined') {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
+                    // בדיקה אם ה-API Key עדיין ערך מציין מיקום
+                    if (firebaseConfig.apiKey === "YOUR_API_KEY" || !firebaseConfig.apiKey) {
+                        console.error("Firebase Configuration Error: Please replace 'YOUR_API_KEY' and other placeholder values in firebaseConfig with your actual Firebase project details.");
+                        return; // Stop execution if config is invalid
                     }
+                    // הסרנו את השימוש ב- __initial_auth_token מכיוון שהוא ספציפי לסביבת Canvas
+                    // Removed __initial_auth_token as it's specific to the Canvas environment
+                    await signInAnonymously(auth);
                     window.currentUserId = auth.currentUser?.uid;
                 } catch (error) {
                     console.error("Firebase authentication error:", error);
@@ -109,6 +126,9 @@
 
         <!-- Start Screen for User Info -->
         <div id="start-screen" class="p-6">
+            <div class="flex justify-center mb-6">
+                <img src="לוגו.PNG" alt="לוגו" class="max-w-[200px] h-auto">
+            </div>
             <p class="text-lg text-center mb-6">אנא מלא/י את פרטיך לפני תחילת החידון:</p>
             <div class="mb-4">
                 <label for="user-name" class="block text-gray-700 text-sm font-bold mb-2">שם מלא:</label>
@@ -125,6 +145,9 @@
             <div id="input-error-message" class="text-red-500 text-center mb-4 hidden">אנא מלא/י את כל השדות.</div>
             <button id="start-quiz-button" class="bg-primary text-white px-6 py-3 rounded-lg shadow-md hover:bg-opacity-90 transition duration-300 w-full">
                 התחל חידון
+            </button>
+            <button id="admin-view-button" class="mt-4 text-sm text-gray-500 hover:text-gray-700 underline block mx-auto">
+                למנהלים: צפייה בתוצאות
             </button>
         </div>
 
@@ -149,8 +172,9 @@
             </div>
         </div>
 
+        <!-- This container is for the individual user's results -->
         <div id="results-container" class="hidden mt-8 text-center">
-            <h2 class="text-2xl font-bold text-primary mb-4">תוצאות החידון</h2>
+            <h2 class="text-2xl font-bold text-primary mb-4">תוצאות החידון שלך</h2>
             <p id="final-score" class="text-xl mb-4"></p>
             <div id="review-area" class="text-right space-y-6">
             </div>
@@ -158,12 +182,11 @@
                 <button id="restart-quiz-button" class="bg-primary text-white px-6 py-3 rounded-lg shadow-md hover:bg-opacity-90 transition duration-300">
                     התחל חידון חדש
                 </button>
-                <button id="view-all-results-button" class="bg-accent text-white px-6 py-3 rounded-lg shadow-md hover:bg-opacity-90 transition duration-300">
-                    צפה בכל התוצאות
-                </button>
+                <!-- Removed 'View All Results' button for regular users -->
             </div>
         </div>
 
+        <!-- This container is for the Admin's view of all results -->
         <div id="all-results-container" class="hidden mt-8">
             <h2 class="text-2xl font-bold text-primary mb-4 text-center">כלל תוצאות החידון</h2>
             <div id="results-table-loader" class="flex justify-center items-center h-24 hidden">
@@ -187,10 +210,11 @@
                 </table>
             </div>
             <button id="back-to-quiz-button" class="bg-primary text-white px-6 py-3 rounded-lg shadow-md hover:bg-opacity-90 transition duration-300 mt-6">
-                חזרה לחידון
+                חזרה למסך הפתיחה
             </button>
         </div>
 
+        <!-- This container is for the Admin's view of individual detailed results -->
         <div id="individual-review-container" class="hidden mt-8">
             <h2 class="text-2xl font-bold text-primary mb-4 text-center">סקירת תוצאות פרטנית</h2>
             <div id="individual-review-area" class="text-right space-y-6">
@@ -204,10 +228,13 @@
     </div>
 
     <script type="module">
-        // Import from global window object set by the Firebase SDK script
-        const db = window.firestoreDb;
-        const auth = window.firebaseAuth;
-        const currentAppId = window.currentAppId;
+        // Global Firebase variables are now defined directly in firebaseConfig above.
+        const db = window.firestoreDb; // Access from window object after module script runs
+        const auth = window.firebaseAuth; // Access from window object after module script runs
+        const currentAppId = window.currentAppId; // Access from window object after module script runs
+
+        // Webhook URL for Make.com
+        const WEBHOOK_URL = "https://hook.eu2.make.com/78wmt6fvbb5vp3hy6lnpfmnihso9sn5l";
 
         const quizData = {
             "questions": [
@@ -274,7 +301,7 @@
                         },
                         {
                             "text": "סוכן עצמאי ישתמש ב-AI בעיקר לשיפור הייעוץ האישי, בעוד שסוכנות תשתמש בה לאופטימיזציה של תהליכים רוחביים כמו חיתום וניהול לידים.",
-                            "rationale": "הבחנה זו משקפת במדויק את הטבלה וההסברים במחקר, המדגישים את ההבדל בין פרסונליזציה אישית ליעילות תפעולית רחבה.",
+                            "rationale": "הבחנה זו משקפת במדויק את הטבלה וההסברים בממחקר, המדגישים את ההבדל בין פרסונליזציה אישית ליעילות תפעולית רחבה.",
                             "isCorrect": true
                         },
                         {
@@ -362,18 +389,18 @@
                         },
                         {
                             "text": "הזמן שלוקח למערכות AI ללמוד ולהשתפר.",
-                            "rationale": "זהו אתגר טכנולוגי פנימי, בעוד שהשאלה מתמקדת באתגר מול הלקוחות.",
+                            "rationale": "זהו אתגר טכני, בעוד שהשאלה מתמקדת באתגר מול הלקוחות.",
                             "isCorrect": false
                         }
                     ]
                 },
                 {
                     "question": "מהו העיקרון המנחה המרכזי שהרגולטורים בישראל שוקלים לאמץ כלפי AI במגזר הפיננסי?",
-                    "hint": "הרגולציה שואפת להתמקד בפעולה עצמה ובתוצאותיה, ולא בטכנו לוגיה הספציפית שמאחוריה.",
+                    "hint": "הרגולציה שואפת להתמקד בפעולה עצמה ובתוצאותיה, ולא בטכנולוגיה הספציפית שמאחוריה.",
                     "answerOptions": [
                         {
                             "text": "איסור גורף על שימוש ב-AI בתהליכי חיתום וקבלת החלטות.",
-                            "rationale": "הגישה המתוארת במחקר היא של עידוד חדשנות תוך ניהול סיכונים, לא איסור גורף.",
+                            "rationale": "הגישה המתוארת בממחקר היא של עידוד חדשנות תוך ניהול סיכונים, לא איסור גורף.",
                             "isCorrect": false
                         },
                         {
@@ -395,7 +422,7 @@
                 },
                 {
                     "question": "העובדה שכ-85% מסוכני הביטוח בישראל עדיין לא התנסו בכלי AI מצביעה בראש ובראשונה על:",
-                    "hint": "נתון זה חושף פער בין הפוטנציאל העצום של הטכנו לוגיה לבין המצב הקיים בשטח.",
+                    "hint": "נתון זה חושף פער בין הפוטנציאל העצום של הטכנולוגיה לבין המצב הקיים בשטח.",
                     "answerOptions": [
                         {
                             "text": "כלי ה-AI אינם יעילים לענף הביטוח.",
@@ -447,7 +474,7 @@
                 },
                 {
                     "question": "בהינתן ש-AI הופכת ל\"טייס משנה\" (Co-pilot), מהי ההמלצה האסטרטגית המרכזית לסוכן השואף להצליח בעתיד?",
-                    "hint": "ההצלחה לא תהיה בהתנגדות לטכנו לוגיה, אלא בשילוב חכם שלה עם החוזקות האנושיות.",
+                    "hint": "ההצלחה לא תהיה בהתנגדות לטכנולוגיה, אלא בשילוב חכם שלה עם החוזקות האנושיות.",
                     "answerOptions": [
                         {
                             "text": "להתמקד אך ורק במכירת פוליסות פשוטות וזולות באופן דיגיטלי.",
@@ -488,6 +515,7 @@
         const userPhoneInput = document.getElementById('user-phone');
         const startQuizButton = document.getElementById('start-quiz-button');
         const inputErrorMessage = document.getElementById('input-error-message');
+        const adminViewButton = document.getElementById('admin-view-button');
 
         const questionTextElement = document.getElementById('question-text');
         const hintTextElement = document.getElementById('hint-text');
@@ -500,7 +528,6 @@
         const finalScoreElement = document.getElementById('final-score');
         const reviewArea = document.getElementById('review-area');
         const restartQuizButton = document.getElementById('restart-quiz-button');
-        const viewAllResultsButton = document.getElementById('view-all-results-button');
         const allResultsContainer = document.getElementById('all-results-container');
         const resultsTableBody = document.getElementById('results-table-body');
         const resultsTableLoader = document.getElementById('results-table-loader');
@@ -595,7 +622,7 @@
 
         async function showResults() {
             quizContainer.classList.add('hidden');
-            resultsContainer.classList.remove('hidden');
+            resultsContainer.classList.remove('hidden'); // Show individual results
             finalScoreElement.textContent = `הציון הסופי שלך: ${score} מתוך ${quizData.questions.length}`;
 
             // Display review for current user's quiz
@@ -617,15 +644,53 @@
                     });
                     console.log("Quiz results saved to Firestore for user:", userId);
                 } catch (e) {
-                    console.error("Error saving document: ", e);
+                    console.error("Error saving document to Firestore: ", e);
                 }
             } else {
-                console.warn("Firestore not initialized or userId not available. Results not saved.");
+                console.warn("Firestore not initialized or userId not available. Results not saved to Firestore.");
+            }
+
+            // Send data to Webhook
+            try {
+                const webhookPayload = {
+                    name: userName,
+                    email: userEmail,
+                    phone: userPhone,
+                    score: score,
+                    totalQuestions: quizData.questions.length,
+                    timestamp: new Date().toISOString()
+                    // You can also add userAnswers here if needed, but it might be large for a webhook
+                    // answers: userAnswers
+                };
+
+                const response = await fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(webhookPayload),
+                });
+
+                if (response.ok) {
+                    console.log("Data successfully sent to webhook!");
+                } else {
+                    console.error("Failed to send data to webhook:", response.status, response.statusText);
+                    const errorText = await response.text();
+                    console.error("Webhook error response:", errorText);
+                }
+            } catch (e) {
+                console.error("Error sending data to webhook: ", e);
             }
         }
 
         function displayIndividualReview(answersToDisplay) {
-            individualReviewArea.innerHTML = '';
+            reviewArea.innerHTML = ''; // Clear previous review for user
+            individualReviewArea.innerHTML = ''; // Clear previous review for admin
+            
+            // Determine which area to populate based on which container is visible
+            const targetArea = resultsContainer.classList.contains('hidden') ? individualReviewArea : reviewArea;
+
+
             answersToDisplay.forEach((answer, index) => {
                 const isCorrectClass = answer.isCorrect ? 'bg-green-50 border-green-500' : 'bg-red-50 border-red-500';
                 
@@ -642,7 +707,7 @@
                 }
 
 
-                individualReviewArea.innerHTML += `
+                targetArea.innerHTML += `
                     <div class="p-4 border-2 rounded-lg ${isCorrectClass}">
                         <p class="text-lg font-semibold text-gray-900 mb-2">${index + 1}. ${answer.question}</p>
                         <p class="mb-1">התשובה של המשתמש: <span class="font-medium ${answer.isCorrect ? 'text-green-700' : 'text-red-700'}">${answer.userAnswer}</span></p>
@@ -674,17 +739,18 @@
             resultsContainer.classList.add('hidden');
             allResultsContainer.classList.add('hidden');
             individualReviewContainer.classList.add('hidden');
-            // Do NOT call loadQuestion here, it's called after startQuizButton is clicked
         }
 
         async function fetchAndDisplayAllResults() {
+            startScreen.classList.add('hidden'); // Hide start screen
             quizContainer.classList.add('hidden');
             resultsContainer.classList.add('hidden');
             individualReviewContainer.classList.add('hidden');
-            allResultsContainer.classList.remove('hidden');
+            allResultsContainer.classList.remove('hidden'); // Show all results table
             resultsTableBody.innerHTML = '';
             resultsTableLoader.classList.remove('hidden');
 
+            // וודא שהפרמטר db קיים לפני הניסיון לשלוף נתונים
             if (db) {
                 try {
                     const resultsCollectionRef = collection(db, `artifacts/${currentAppId}/public/data/quiz_results`);
@@ -714,7 +780,7 @@
                     });
 
                 } catch (e) {
-                    console.error("Error fetching results: ", e);
+                    console.error("Error fetching results from Firestore: ", e);
                     resultsTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-red-600">שגיאה בטעינת התוצאות.</td></tr>';
                 } finally {
                     resultsTableLoader.classList.add('hidden');
@@ -756,8 +822,12 @@
 
         restartQuizButton.addEventListener('click', resetQuiz);
         restartButton.addEventListener('click', resetQuiz);
-        viewAllResultsButton.addEventListener('click', fetchAndDisplayAllResults);
-        backToQuizButton.addEventListener('click', resetQuiz); // Back to quiz (resets)
+        
+        // Admin view button
+        adminViewButton.addEventListener('click', fetchAndDisplayAllResults);
+
+        // Back buttons
+        backToQuizButton.addEventListener('click', resetQuiz); // Back to start screen (resets quiz)
         backToAllResultsButton.addEventListener('click', fetchAndDisplayAllResults); // Back to all results table
 
         // Initial state is handled by firebaseReady event listener
